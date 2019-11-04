@@ -4,8 +4,11 @@
 # which can be used with multiple SDK versions.
 STANDALONE = y
 
+#XTENSA_CORE = D106micro_be_TRAX_PROD
+XTENSA_CORE = D106_micro_be_ecc
+
 # Directory to install toolchain to, by default inside current dir.
-TOOLCHAIN = $(TOP)/xtensa-lx106-elf
+TOOLCHAIN = $(TOP)/xtensa-$(XTENSA_CORE)-elf
 
 
 # Vendor SDK version to install, see VENDOR_SDK_ZIP_* vars below
@@ -74,7 +77,7 @@ VENDOR_SDK_DIR_0.9.2 = esp_iot_sdk_v0.9.2
 
 
 
-all: esptool libcirom standalone sdk sdk_patch $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/lib/libhal.a $(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc lwip
+all: esptool libcirom standalone sdk sdk_patch $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/lib/libhal.a $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc lwip
 	@echo
 	@echo "Xtensa toolchain is built, to use it:"
 	@echo
@@ -84,7 +87,7 @@ ifneq ($(STANDALONE),y)
 	@echo "Espressif ESP8266 SDK is installed. Toolchain contains only Open Source components"
 	@echo "To link external proprietary libraries add:"
 	@echo
-	@echo "xtensa-lx106-elf-gcc -I$(TOP)/sdk/include -L$(TOP)/sdk/lib"
+	@echo "xtensa-$(XTENSA_CORE)-elf-gcc -I$(TOP)/sdk/include -L$(TOP)/sdk/lib"
 	@echo
 else
 	@echo "Espressif ESP8266 SDK is installed, its libraries and headers are merged with the toolchain"
@@ -94,12 +97,12 @@ endif
 standalone: sdk sdk_patch toolchain
 ifeq ($(STANDALONE),y)
 	@echo "Installing vendor SDK headers into toolchain sysroot"
-	@cp -Rf sdk/include/* $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/include/
+	@cp -Rf sdk/include/* $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/include/
 	@echo "Installing vendor SDK libs into toolchain sysroot"
-	@cp -Rf sdk/lib/* $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/lib/
+	@cp -Rf sdk/lib/* $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/lib/
 	@echo "Installing vendor SDK linker scripts into toolchain sysroot"
-	@sed -e 's/\r//' sdk/ld/eagle.app.v6.ld | sed -e s@../ld/@@ >$(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/lib/eagle.app.v6.ld
-	@sed -e 's/\r//' sdk/ld/eagle.rom.addr.v6.ld >$(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/lib/eagle.rom.addr.v6.ld
+	@sed -e 's/\r//' sdk/ld/eagle.app.v6.ld | sed -e s@../ld/@@ >$(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/lib/eagle.app.v6.ld
+	@sed -e 's/\r//' sdk/ld/eagle.rom.addr.v6.ld >$(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/lib/eagle.rom.addr.v6.ld
 endif
 
 clean: clean-sdk
@@ -117,14 +120,14 @@ clean-sdk:
 	$(MAKE) -C esp-open-lwip -f Makefile.open clean
 
 clean-sysroot:
-	rm -rf $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/lib/*
-	rm -rf $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/include/*
+	rm -rf $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/lib/*
+	rm -rf $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/include/*
 
 
 esptool: toolchain
 	cp esptool/esptool.py $(TOOLCHAIN)/bin/
 
-toolchain $(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/lib/libc.a: crosstool-NG/.built
+toolchain $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/lib/libc.a: crosstool-NG/.built
 
 crosstool-NG/.built: crosstool-NG/ct-ng
 	cp -f 1000-mforce-l32.patch crosstool-NG/local-patches/gcc/4.8.5/
@@ -132,7 +135,7 @@ crosstool-NG/.built: crosstool-NG/ct-ng
 	touch $@
 
 _toolchain:
-	./ct-ng xtensa-lx106-elf
+	./ct-ng xtensa-$(XTENSA_CORE)-elf
 	sed -r -i.org s%CT_PREFIX_DIR=.*%CT_PREFIX_DIR="$(TOOLCHAIN)"% .config
 	sed -r -i s%CT_INSTALL_DIR_RO=y%"#"CT_INSTALL_DIR_RO=y% .config
 	cat ../crosstool-config-overrides >> .config
@@ -154,21 +157,21 @@ crosstool-NG/bootstrap:
 	@echo "You cloned without --recursive, fetching submodules for you."
 	git submodule update --init --recursive
 
-libcirom: $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/lib/libcirom.a
+libcirom: $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/lib/libcirom.a
 
-$(TOOLCHAIN)/xtensa-lx106-elf/sysroot/lib/libcirom.a: $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/lib/libc.a $(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc
+$(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/lib/libcirom.a: $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/lib/libc.a $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc
 	@echo "Creating irom version of libc..."
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-objcopy --rename-section .text=.irom0.text \
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-objcopy --rename-section .text=.irom0.text \
 		--rename-section .literal=.irom0.literal $(<) $(@);
 
-libhal: $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/lib/libhal.a
+libhal: $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/lib/libhal.a
 
-$(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/lib/libhal.a: $(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc
-	$(MAKE) -C lx106-hal -f ../Makefile _libhal
+$(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/lib/libhal.a: $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc
+	$(MAKE) -C $(XTENSA_CORE)-hal -f ../Makefile _libhal
 
 _libhal:
 	autoreconf -i
-	PATH="$(TOOLCHAIN)/bin:$(PATH)" ./configure --host=xtensa-lx106-elf --prefix=$(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr
+	PATH="$(TOOLCHAIN)/bin:$(PATH)" ./configure --host=xtensa-$(XTENSA_CORE)-elf --prefix=$(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr
 	PATH="$(TOOLCHAIN)/bin:$(PATH)" $(MAKE)
 	PATH="$(TOOLCHAIN)/bin:$(PATH)" $(MAKE) install
 
@@ -209,8 +212,8 @@ sdk_patch: $(VENDOR_SDK_DIR)/.dir .sdk_patch_$(VENDOR_SDK)
 .sdk_patch_2.1.0-18-g61248df .sdk_patch_2.1.0: user_rf_cal_sector_set.o
 	echo -e "#undef ESP_SDK_VERSION\n#define ESP_SDK_VERSION 020100" >>$(VENDOR_SDK_DIR)/include/esp_sdk_ver.h
 	$(PATCH) -d $(VENDOR_SDK_DIR) -p1 < c_types-c99_sdk_2.patch
-	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar rs libwpa.a tmp/*.o
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-ar r $(VENDOR_SDK_DIR)/lib/libmain.a user_rf_cal_sector_set.o
+	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar rs libwpa.a tmp/*.o
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar r $(VENDOR_SDK_DIR)/lib/libmain.a user_rf_cal_sector_set.o
 	@touch $@
 
 .sdk_patch_2.0.0: ESP8266_NONOS_SDK_V2.0.0_patch_16_08_09.zip user_rf_cal_sector_set.o
@@ -218,20 +221,20 @@ sdk_patch: $(VENDOR_SDK_DIR)/.dir .sdk_patch_$(VENDOR_SDK)
 	$(UNZIP) ESP8266_NONOS_SDK_V2.0.0_patch_16_08_09.zip
 	mv libmain.a libnet80211.a libpp.a $(VENDOR_SDK_DIR_2.0.0)/lib/
 	$(PATCH) -d $(VENDOR_SDK_DIR) -p1 < c_types-c99_sdk_2.patch
-	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar rs libwpa.a tmp/*.o
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-ar r $(VENDOR_SDK_DIR)/lib/libmain.a user_rf_cal_sector_set.o
+	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar rs libwpa.a tmp/*.o
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar r $(VENDOR_SDK_DIR)/lib/libmain.a user_rf_cal_sector_set.o
 	@touch $@
 
 .sdk_patch_1.5.4:
 	echo -e "#undef ESP_SDK_VERSION\n#define ESP_SDK_VERSION 010504" >>$(VENDOR_SDK_DIR)/include/esp_sdk_ver.h
 	$(PATCH) -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar rs libwpa.a tmp/*.o
+	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar rs libwpa.a tmp/*.o
 	@touch $@
 
 .sdk_patch_1.5.3:
 	echo -e "#undef ESP_SDK_VERSION\n#define ESP_SDK_VERSION 010503" >>$(VENDOR_SDK_DIR)/include/esp_sdk_ver.h
 	$(PATCH) -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar rs libwpa.a tmp/*.o
+	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar rs libwpa.a tmp/*.o
 	@touch $@
 
 .sdk_patch_1.5.2: Patch01_for_ESP8266_NONOS_SDK_V1.5.2.zip
@@ -239,19 +242,19 @@ sdk_patch: $(VENDOR_SDK_DIR)/.dir .sdk_patch_$(VENDOR_SDK)
 	$(UNZIP) Patch01_for_ESP8266_NONOS_SDK_V1.5.2.zip
 	mv libssl.a libnet80211.a libmain.a $(VENDOR_SDK_DIR_1.5.2)/lib/
 	$(PATCH) -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar rs libwpa.a tmp/*.o
+	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar rs libwpa.a tmp/*.o
 	@touch $@
 
 .sdk_patch_1.5.1:
 	echo -e "#undef ESP_SDK_VERSION\n#define ESP_SDK_VERSION 010501" >>$(VENDOR_SDK_DIR)/include/esp_sdk_ver.h
 	$(PATCH) -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar rs libwpa.a tmp/*.o
+	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar rs libwpa.a tmp/*.o
 	@touch $@
 
 .sdk_patch_1.5.0:
 	echo -e "#undef ESP_SDK_VERSION\n#define ESP_SDK_VERSION 010500" >>$(VENDOR_SDK_DIR)/include/esp_sdk_ver.h
 	$(PATCH) -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-lx106-elf-ar rs libwpa.a tmp/*.o
+	cd $(VENDOR_SDK_DIR)/lib; mkdir -p tmp; cd tmp; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar x ../libcrypto.a; cd ..; $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar rs libwpa.a tmp/*.o
 	@touch $@
 
 .sdk_patch_1.4.0:
@@ -273,7 +276,7 @@ sdk_patch: $(VENDOR_SDK_DIR)/.dir .sdk_patch_$(VENDOR_SDK)
 	#mv libsmartconfig_2.4.2.a $(VENDOR_SDK_DIR_1.2.0)/lib/libsmartconfig.a
 	mv libssl.a libnet80211.a libpp.a libsmartconfig.a $(VENDOR_SDK_DIR_1.2.0)/lib/
 	$(PATCH) -f -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-ar r $(VENDOR_SDK_DIR_1.2.0)/lib/libmain.a empty_user_rf_pre_init.o
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar r $(VENDOR_SDK_DIR_1.2.0)/lib/libmain.a empty_user_rf_pre_init.o
 	@touch $@
 
 .sdk_patch_1.1.2: scan_issue_test.zip 1.1.2_patch_02.zip empty_user_rf_pre_init.o
@@ -282,13 +285,13 @@ sdk_patch: $(VENDOR_SDK_DIR)/.dir .sdk_patch_$(VENDOR_SDK)
 	$(UNZIP) 1.1.2_patch_02.zip
 	mv libmain.a libnet80211.a libpp.a $(VENDOR_SDK_DIR_1.1.2)/lib/
 	$(PATCH) -f -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-ar r $(VENDOR_SDK_DIR_1.1.2)/lib/libmain.a empty_user_rf_pre_init.o
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar r $(VENDOR_SDK_DIR_1.1.2)/lib/libmain.a empty_user_rf_pre_init.o
 	@touch $@
 
 .sdk_patch_1.1.1: empty_user_rf_pre_init.o
 	echo -e "#undef ESP_SDK_VERSION\n#define ESP_SDK_VERSION 010101" >>$(VENDOR_SDK_DIR)/include/esp_sdk_ver.h
 	$(PATCH) -f -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-ar r $(VENDOR_SDK_DIR_1.1.1)/lib/libmain.a empty_user_rf_pre_init.o
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar r $(VENDOR_SDK_DIR_1.1.1)/lib/libmain.a empty_user_rf_pre_init.o
 	@touch $@
 
 .sdk_patch_1.1.0: lib_patch_on_sdk_v1.1.0.zip empty_user_rf_pre_init.o
@@ -298,7 +301,7 @@ sdk_patch: $(VENDOR_SDK_DIR)/.dir .sdk_patch_$(VENDOR_SDK)
 	mv libmain_patch_01.a $(VENDOR_SDK_DIR_1.1.0)/lib/libmain.a
 	mv libssl_patch_01.a $(VENDOR_SDK_DIR_1.1.0)/lib/libssl.a
 	$(PATCH) -f -d $(VENDOR_SDK_DIR) -p1 < c_types-c99.patch
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-ar r $(VENDOR_SDK_DIR_1.1.0)/lib/libmain.a empty_user_rf_pre_init.o
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar r $(VENDOR_SDK_DIR_1.1.0)/lib/libmain.a empty_user_rf_pre_init.o
 	@touch $@
 
 .sdk_patch_1.0.1: libnet80211.zip esp_iot_sdk_v1.0.1/.dir
@@ -349,21 +352,21 @@ sdk_patch: $(VENDOR_SDK_DIR)/.dir .sdk_patch_$(VENDOR_SDK)
 	cp FRM_ERR_PATCH/*.a $(VENDOR_SDK_DIR)/lib/
 	@touch $@
 
-empty_user_rf_pre_init.o: empty_user_rf_pre_init.c $(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc $(VENDOR_SDK_DIR)/.dir
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc -O2 -I$(VENDOR_SDK_DIR)/include -c $<
+empty_user_rf_pre_init.o: empty_user_rf_pre_init.c $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc $(VENDOR_SDK_DIR)/.dir
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc -O2 -I$(VENDOR_SDK_DIR)/include -c $<
 
-user_rf_cal_sector_set.o: user_rf_cal_sector_set.c $(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc $(VENDOR_SDK_DIR)/.dir
-	$(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc -O2 -I$(VENDOR_SDK_DIR)/include -c $<
+user_rf_cal_sector_set.o: user_rf_cal_sector_set.c $(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc $(VENDOR_SDK_DIR)/.dir
+	$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc -O2 -I$(VENDOR_SDK_DIR)/include -c $<
 
 lwip: toolchain sdk_patch
 ifeq ($(STANDALONE),y)
 	$(MAKE) -C esp-open-lwip -f Makefile.open install \
-	    CC=$(TOOLCHAIN)/bin/xtensa-lx106-elf-gcc \
-	    AR=$(TOOLCHAIN)/bin/xtensa-lx106-elf-ar \
+	    CC=$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-gcc \
+	    AR=$(TOOLCHAIN)/bin/xtensa-$(XTENSA_CORE)-elf-ar \
 	    PREFIX=$(TOOLCHAIN)
 	cp -a esp-open-lwip/include/arch esp-open-lwip/include/lwip esp-open-lwip/include/netif \
 	    esp-open-lwip/include/lwipopts.h \
-	    $(TOOLCHAIN)/xtensa-lx106-elf/sysroot/usr/include/
+	    $(TOOLCHAIN)/xtensa-$(XTENSA_CORE)-elf/sysroot/usr/include/
 endif
 
 
