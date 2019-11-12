@@ -1,1 +1,0 @@
-syscache_asm.o: syscache_asm.S
