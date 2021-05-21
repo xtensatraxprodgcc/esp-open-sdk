@@ -10,7 +10,7 @@
  *  core-specific but system independent.
  */
 
-/* Customer ID=15081; Build=0x82a9e; Copyright (c) 2000-2010 Tensilica Inc.
+/* Copyright (c) 2000-2007 Tensilica Inc.
 
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
@@ -35,30 +35,33 @@
 #ifndef XTENSA_CONFIG_SYSTEM_H
 #define XTENSA_CONFIG_SYSTEM_H
 
+/*#include <xtensa/hal.h>*/
+
+
 
 /*----------------------------------------------------------------------
 				CONFIGURED SOFTWARE OPTIONS
   ----------------------------------------------------------------------*/
 
 #define XSHAL_USE_ABSOLUTE_LITERALS	0	/* (sw-only option, whether software uses absolute literals) */
-#define XSHAL_HAVE_TEXT_SECTION_LITERALS 1 /* Set if there is some memory that allows both code and literals.  */
 
 #define XSHAL_ABI			XTHAL_ABI_CALL0	/* (sw-only option, selected ABI) */
 /*  The above maps to one of the following constants:  */
 #define XTHAL_ABI_WINDOWED		0
 #define XTHAL_ABI_CALL0			1
+/*  Alternatives:  */
+/*#define XSHAL_WINDOWED_ABI		0*/	/* set if windowed ABI selected */
+/*#define XSHAL_CALL0_ABI		1*/	/* set if call0 ABI selected */
 
 #define XSHAL_CLIB			XTHAL_CLIB_NEWLIB	/* (sw-only option, selected C library) */
 /*  The above maps to one of the following constants:  */
 #define XTHAL_CLIB_NEWLIB		0
 #define XTHAL_CLIB_UCLIBC		1
-#define XTHAL_CLIB_XCLIB		2
+/*  Alternatives:  */
+/*#define XSHAL_NEWLIB			1*/	/* set if newlib C library selected */
+/*#define XSHAL_UCLIBC			0*/	/* set if uCLibC C library selected */
 
 #define XSHAL_USE_FLOATING_POINT	1
-
-#define XSHAL_FLOATING_POINT_ABI        0
-
-/*  SW workarounds enabled for HW errata:  */
 
 /*----------------------------------------------------------------------
 				DEVICE ADDRESSES
@@ -85,8 +88,8 @@
 #define XSHAL_ROM_PADDR		0x50000000
 #define XSHAL_ROM_SIZE		0x01000000
 /*  Largest available area (free of vectors):  */
-#define XSHAL_ROM_AVAIL_VADDR	0x50000330
-#define XSHAL_ROM_AVAIL_VSIZE	0x00FFFCD0
+#define XSHAL_ROM_AVAIL_VADDR	0x50000300
+#define XSHAL_ROM_AVAIL_VSIZE	0x00FFFD00
 
 /*  System RAM:  */
 #define XSHAL_RAM_VADDR		0x60000000
@@ -112,6 +115,8 @@
 #define XSHAL_RAM_BYPASS_PSIZE		0x04000000
 
 /*  Alternate system RAM (different device than system RAM):  */
+/*#define XSHAL_ALTRAM_[VP]ADDR		...not configured...*/
+/*#define XSHAL_ALTRAM_SIZE		...not configured...*/
 
 /*  Some available location in which to place devices in a simulation (eg. XTMP):  */
 #define XSHAL_SIMIO_CACHED_VADDR	0xC0000000
@@ -119,12 +124,6 @@
 #define XSHAL_SIMIO_PADDR		0xC0000000
 #define XSHAL_SIMIO_SIZE		0x20000000
 
-
-/*----------------------------------------------------------------------
- *  For use by reference testbench exit and diagnostic routines.
- */
-#define XSHAL_MAGIC_EXIT		0x0
-#define XSHAL_STL_INFO_LOCATION		0x80
 
 /*----------------------------------------------------------------------
  *			DEVICE-ADDRESS DEPENDENT...
@@ -214,12 +213,10 @@
 				VECTOR INFO AND SIZES
   ----------------------------------------------------------------------*/
 
-#define XSHAL_VECTORS_PACKED		0	/* UNUSED */
+#define XSHAL_VECTORS_PACKED		0
 #define XSHAL_STATIC_VECTOR_SELECT	0
 #define XSHAL_RESET_VECTOR_VADDR	0x50000000
 #define XSHAL_RESET_VECTOR_PADDR	0x50000000
-#define XSHAL_MEMERROR_VECTOR_VADDR	0x50000330
-#define XSHAL_MEMERROR_VECTOR_PADDR	0x50000330
 
 /*
  *  Sizes allocated to vectors by the system (memory map) configuration.
@@ -249,6 +246,7 @@
 #define XSHAL_NMI_VECTOR_SIZE	0x0000000C
 #define XSHAL_NMI_VECTOR_ISROM	0
 #define XSHAL_INTLEVEL3_VECTOR_SIZE	XSHAL_NMI_VECTOR_SIZE
+
 
 #endif /*XTENSA_CONFIG_SYSTEM_H*/
 
