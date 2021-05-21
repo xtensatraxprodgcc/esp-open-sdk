@@ -65,6 +65,11 @@ $ git clone --recursive https://github.com/xtensatraxprodgcc/esp-open-sdk.git
 
 Here, assuming that user is interested only in xtensa gcc tool chain. 
 
+To build tool chain for "D106u_LX7_ecc_prod", run the make as given below.
+```
+$ make STANDALONE=n XTENSA_CORE=D106u_LX7_ecc_prod
+```
+
 To build tool chain for "D106_micro_be_ecc", run the make as given below.
 ```
 $ make STANDALONE=n XTENSA_CORE=D106_micro_be_ecc
